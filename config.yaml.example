@@ -1,0 +1,32 @@
+token: "tok"
+prefix: "o!"
+
+guild: ~
+
+exclude:
+  prefixes:
+    - "o!"
+    - "!"
+    - "?"
+    - "."
+    - "!sh"
+    - "^"
+    - "rm!"
+  channels:
+    - 1202132623917326387
+    - 1202128831927029783
+
+auto:
+  enabled: True
+  channel: 1202128831927029782
+  interval: 7
+  min: 1
+  max: 3
+
+regenerate:
+  enabled: True
+  timezone: "Asia/Tokyo"
+
+logging:
+  enabled: True
+  channel: 123456789
