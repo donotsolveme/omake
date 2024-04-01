@@ -10,23 +10,32 @@ from discord.ext.commands import Context
 if TYPE_CHECKING:
     from bot import Omake
 
-
 class Generate(commands.Cog):
     def __init__(self, bot: Omake) -> None:
         self.bot = bot
-        if self.bot.model:
+        if self.hasModel():
             if self.bot.config["auto"]["enabled"]:
                 interval = self.bot.config["auto"]["interval"]
                 self.auto_make.change_interval(minutes=interval)
                 self.auto_make.start()
 
+    def cog_unload(self):
+        self.auto_make.cancel()
+
+    def hasModel(self) -> bool:
+        try:
+            self.bot.model
+            return True
+        except:
+            return False  
+
     async def make_sentence(self, with_start: Optional[str] = None) -> str | None:
         sentence = None
 
         if with_start:
-            self.bot.model.make_sentence_with_start(with_start, tries=250)
+            sentence = self.bot.model.make_sentence_with_start(with_start, tries=250)
         else:
-            self.bot.model.make_sentence(tries=250)
+            sentence = self.bot.model.make_sentence(tries=250, test_output=False)
 
         if sentence is not None:
             sentence = sentence.replace(" ", "")
@@ -35,6 +44,7 @@ class Generate(commands.Cog):
 
     @commands.command()
     async def make(self, ctx: Context, with_start: Optional[str] = None):
+        if not self.hasModel(): return
         if with_start:
             sentence = await self.make_sentence(with_start)
             await ctx.send(sentence)
@@ -46,6 +56,11 @@ class Generate(commands.Cog):
     async def make_error(self, ctx: Context, error):
         if error is KeyError:
             await ctx.send(f"{ctx.command.with_start}から始まる文字列が存在しません。")
+        elif error is discord.HTTPException:
+            await ctx.send(f"生成に失敗しました！メッセージの数が少ない可能性があります。")
+        else:
+            await ctx.send(f"生成に失敗しました！ログを確認してください。")
+
         print(error)
 
     @tasks.loop()
